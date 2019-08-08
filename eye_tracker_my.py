@@ -63,25 +63,26 @@ while True:
         mask = np.zeros((height, width), np.uint8)
         cv2.polylines(mask, [left_eye_region], True, 255, 2)
         cv2.fillPoly(mask, [left_eye_region], 255)
+        left_eye = cv2.bitwise_and(gray, gray, mask=mask)
 
-        #Separating the eye_frame
+        # Separating the eye_frame
         min_x = np.min(left_eye_region[:, 0])
         max_x = np.max(left_eye_region[:, 0])
 
         min_y = np.min(left_eye_region[:, 1])
         max_y = np.max(left_eye_region[:, 1])
 
-        eye_frame = frame[min_y: max_y, min_x: max_x]
-        grayscale_eye = cv2.cvtColor(eye_frame, cv2.COLOR_BGR2GRAY)
+        gray_scale_eye = left_eye[min_y: max_y, min_x: max_x]
+        #grayscale_eye = cv2.cvtColor(eye_frame, cv2.COLOR_BGR2GRAY)
 
         # Take the inverse binary of the eye frame
-        _, threshold_eye = cv2.threshold(grayscale_eye, 70, 255, cv2.THRESH_BINARY_INV)
-        eye_frame = cv2.resize(eye_frame, None, fx=5, fy=5)
+        _, threshold_eye = cv2.threshold(gray_scale_eye, 70, 255, cv2.THRESH_BINARY_INV)
+        eye_frame = cv2.resize(gray_scale_eye, None, fx=5, fy=5)
         threshold_eye = cv2.resize(threshold_eye, None, fx=5, fy=5)
 
         cv2.imshow("Eye", eye_frame)
         cv2.imshow("Threshold", threshold_eye)
-        cv2.imshow("Mask", mask)
+        cv2.imshow("Left Eye", left_eye)
 
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1)
