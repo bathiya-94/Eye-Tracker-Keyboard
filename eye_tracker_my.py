@@ -58,6 +58,13 @@ while True:
                                     (landmarks.part(41).x, landmarks.part(41).y)], np.int32)
         # cv2.polylines(frame, [left_eye_region], True, (0, 0, 255), 2)
 
+        # mask
+        height, width, _ = frame.shape
+        mask = np.zeros((height, width), np.uint8)
+        cv2.polylines(mask, [left_eye_region], True, 255, 2)
+        cv2.fillPoly(mask, [left_eye_region], 255)
+
+        #Separating the eye_frame
         min_x = np.min(left_eye_region[:, 0])
         max_x = np.max(left_eye_region[:, 0])
 
@@ -70,9 +77,11 @@ while True:
         # Take the inverse binary of the eye frame
         _, threshold_eye = cv2.threshold(grayscale_eye, 70, 255, cv2.THRESH_BINARY_INV)
         eye_frame = cv2.resize(eye_frame, None, fx=5, fy=5)
+        threshold_eye = cv2.resize(threshold_eye, None, fx=5, fy=5)
 
         cv2.imshow("Eye", eye_frame)
         cv2.imshow("Threshold", threshold_eye)
+        cv2.imshow("Mask", mask)
 
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1)
