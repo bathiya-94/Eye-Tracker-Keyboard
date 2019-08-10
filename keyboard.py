@@ -12,13 +12,18 @@ letter_set_1 = {0: "Q", 1: "W", 2: "E",  3: "R", 4: "T",
 
 
 # drawing keys
-def generate_key(x, y, letter_index):
+def generate_key(x, y, letter_index, highlight_letter):
 
     key_height = 200
     key_width = 200
     key_thickness = 3
-    cv2.rectangle(keyboard, (x + key_thickness, y + key_thickness),
-                  (x + key_width - key_thickness, y+key_width - key_thickness), (255, 0, 0), key_thickness)
+
+    if highlight_letter:
+        cv2.rectangle(keyboard, (x + key_thickness, y + key_thickness),
+                      (x + key_width - key_thickness, y + key_width - key_thickness), (255, 255, 255), -1)
+    else:
+        cv2.rectangle(keyboard, (x + key_thickness, y + key_thickness),
+                      (x + key_width - key_thickness, y+key_width - key_thickness), (255, 0, 0), key_thickness)
 
     # Keyboard Letter Settings
     keyboard_font = cv2.FONT_HERSHEY_PLAIN
@@ -35,8 +40,7 @@ def generate_key(x, y, letter_index):
 key_x = 0
 key_y = 0
 for i in range(26):
-    print(i)
-    generate_key(key_x, key_y, i)
+    generate_key(key_x, key_y, i, False)
 
     if (i + 1) % 5 == 0:
         key_x = 0
