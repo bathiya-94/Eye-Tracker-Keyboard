@@ -1,8 +1,9 @@
 import cv2
-import  numpy as np
-import dlib
+import numpy as np
+import dlib 
+import pyglet
 from math import hypot
-
+import time
 
 cap = cv2.VideoCapture(0)
 detector = dlib.get_frontal_face_detector()
@@ -82,6 +83,11 @@ def get_gazing_ratio(eye_points, facial_landmarks):
         return -1
 
 
+# Text board
+display_board = np.zeros((500, 500), np.uint8)
+display_board[:] = 255
+
+
 # Key board Settings
 keyboard = np.zeros((1000, 1000, 3), np.uint8)
 
@@ -118,12 +124,28 @@ def generate_key(x, y, letter_index, highlight_letter):
                 letter_thickness)
 
 
+# Sound
+success_notification = pyglet.media.load("sound.wav", streaming=False)
+left_notification = pyglet.media.load("left.wav", streaming=False)
+right_notification = pyglet.media.load("right.wav", streaming=False)
+
+# Counting the frame
+frame_counter = 0
+blinking_frame_counter = 0
+letter_frame_index = 0
+typed_text = ""
+eyes_position_current = "left"
+eyes_position_previous = "left"
 # Main Program
 while True:
     _, frame = cap.read()
+    keyboard[:] = (0, 0, 0)
+    frame_counter += 1
     # Indicator frame
     indicator_frame = np.zeros((500, 500, 3), np.uint8)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    selected_letter = letter_set_1[letter_frame_index]
 
     faces = detector(gray)
     for face in faces:
@@ -138,6 +160,15 @@ while True:
 
         if blinking_ratio > 5.7:
             cv2.putText(frame, "BLINKING", (50, 150), font, 3, (255, 0, 0))
+            blinking_frame_counter += 1
+            frame_counter -= 1
+
+            if blinking_frame_counter == 5:
+                typed_text += selected_letter
+                success_notification.play()
+                time.sleep(1)
+        else:
+            blinking_frame_counter = 0
 
         # Get gazing ratio
         gazing_ratio_left_eye = get_gazing_ratio([36, 37, 38, 39, 40, 41], landmarks)
@@ -147,33 +178,56 @@ while True:
 
         if average_gaze_ratio < 0:
             cv2.putText(frame, "BRING YOUR EYES CLOSER TO CAMERA", (50, 350), font, 2, (0, 0, 255), 3)
-        elif 0 <= average_gaze_ratio <= 1:
+        elif 0 <= average_gaze_ratio <= 0.9:
             cv2.putText(frame, "LEFT", (50, 350), font, 2, (0, 0, 255), 3)
-            indicator_frame[:] = (0, 0, 255)
-        elif 1 < average_gaze_ratio < 3:
+            #indicator_frame[:] = (0, 0, 255)
+            eyes_position_current = "left"
+            if eyes_position_current != eyes_position_previous:
+                # left_notification.play()
+                # time.sleep(1)
+                print("left")
+                eyes_position_previous = "left"
+
+        elif 0.9 < average_gaze_ratio < 3:
             cv2.putText(frame, "CENTER", (50, 350), font, 2, (0, 0, 255), 3)
+
         else:
             cv2.putText(frame, "RIGHT", (50, 350), font, 2, (0, 0, 255), 3)
-            indicator_frame[:] = (0, 255, 0)
+            # indicator_frame[:] = (0, 255, 0)
+            eyes_position_current = "right"
+            if eyes_position_current != eyes_position_previous:
+                # right_notification.play()
+                # time.sleep(1)
+                print("right")
+                eyes_position_previous = "right"
 
-        # threshold_eye = cv2.resize(threshold_eye, None, fx=5, fy=5)
-        # cv2.imshow("Threshold", threshold_eye)
-        # cv2.imshow("Left Eye", left_eye_threshold)
-        # cv2.imshow("Right Eye", right_eye_threshold)
+        # Generating keyboard
+        if frame_counter == 10:
+            letter_frame_index += 1
+            frame_counter = 0
+
+        if letter_frame_index == 15:
+            letter_frame_index = 0
+
         key_x = 0
         key_y = 0
-        for i in range(26):
-            generate_key(key_x, key_y, i, False)
+        for i in range(15):
+            if i == letter_frame_index:
+                generate_key(key_x, key_y, letter_frame_index, True)
+            else:
+                generate_key(key_x, key_y, i, False)
 
             if (i + 1) % 5 == 0:
                 key_x = 0
                 key_y = key_y + 200
             else:
                 key_x = key_x + 200
+        cv2.putText(display_board, typed_text, (10, 100), font, 4, 0, 3)
 
     cv2.imshow("Frame", frame)
-    cv2.imshow("Indicator Frame", indicator_frame)
+    #cv2.imshow("Indicator Frame", indicator_frame)
     cv2.imshow("Virtual Keyboard", keyboard)
+    cv2.imshow("Display board", display_board)
     key = cv2.waitKey(1)
     if key == 27:
         break
