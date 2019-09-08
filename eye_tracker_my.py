@@ -125,9 +125,9 @@ def generate_key(x, y, letter_index, highlight_letter):
 
 
 # Sound
-success_notification = pyglet.media.load("sound.wav", streaming=False)
-left_notification = pyglet.media.load("left.wav", streaming=False)
-right_notification = pyglet.media.load("right.wav", streaming=False)
+# success_notification = pyglet.media.load("sound.wav", streaming=False)
+# left_notification = pyglet.media.load("left.wav", streaming=False)
+# right_notification = pyglet.media.load("right.wav", streaming=False)
 
 # Counting the frame
 frame_counter = 0
@@ -136,13 +136,16 @@ letter_frame_index = 0
 typed_text = ""
 eyes_position_current = "left"
 eyes_position_previous = "left"
+
 # Main Program
 while True:
     _, frame = cap.read()
     keyboard[:] = (0, 0, 0)
     frame_counter += 1
+
     # Indicator frame
     indicator_frame = np.zeros((500, 500, 3), np.uint8)
+
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     selected_letter = letter_set_1[letter_frame_index]
@@ -165,8 +168,8 @@ while True:
 
             if blinking_frame_counter == 5:
                 typed_text += selected_letter
-                success_notification.play()
-                time.sleep(1)
+                # success_notification.play()
+                # time.sleep(1)
         else:
             blinking_frame_counter = 0
 
@@ -211,6 +214,7 @@ while True:
 
         key_x = 0
         key_y = 0
+
         for i in range(15):
             if i == letter_frame_index:
                 generate_key(key_x, key_y, letter_frame_index, True)
